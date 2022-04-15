@@ -1,0 +1,89 @@
+---
+title: "Clean Up On Aisle 5"
+author: "Rebecca Irons"
+date: '2022-04-15'
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Into the Tidyverse: cleaning data
+
+This document provides the step-by-step instructions to tidy SABAP2 data using the tidyverse
+to then create a plot of the probability of active moult in female and male sunbirds separated
+from east to west. The species code (SPP) can be changed to pull data a different species. 
+The malachite sunbird (code: 751) is the focal species for this particular version of the document. 
+
+Clean your workspace. 
+```{r step 1}
+rm(list=ls())
+```
+
+Install the necessary packages:
+
+- to manipulate the data 
+```{r step 2a}
+install.packages("tidyverse")
+```
+
+- to access the data from SABAP2 
+```{r step 2b}
+install.packages("RCurl")
+install.packages("rjson")
+```
+
+Load the packages.  
+```{r step 3}
+library(dplyr)
+library(ggplot2)
+library(broom)
+library(RCurl)
+library(rjson)
+```
+
+Using an API, access the SABAP2 database and load the data for your focal species. 
+
+```{r step 4}
+SPP = 751
+ringing_data <- read.csv(paste('https://api.birdmap.africa/safring/species/records_list/',SPP,'?format=csv',sep=""))
+```
+
+Make the ages numeric and filter the juveniles from the adults (only working with adults).
+```{r step 5}
+ringing_data$Age <- as.numeric(ringing_data$Age)
+ringing_data <- filter(ringing_data, Age>3)
+```
+
+Tidy the metric data (tarsus length, mass etc) so that they are numeric.
+```{r step 6}
+ringing_data$Mass <- as.numeric(as.character(ringing_data$Mass))
+ringing_data$Wing <- as.numeric(as.character(ringing_data$Wing))
+ringing_data$Culmen <- as.numeric(as.character(ringing_data$Culmen)) 
+ringing_data$Head <- as.numeric(as.character(ringing_data$Head))
+ringing_data$Tarsus <- as.numeric(as.character(ringing_data$Tarsus))
+```
+
+A common issue in the SAFRING database is that volunteers fill cards in with a zero as opposed to leaving the space blank; therefore, these zeros need to be removed. 
+```{r step 7}
+ringing_data$Mass[ringing_data$Mass==0] <- NA
+ringing_data$Wing[ringing_data$Wing==0] <- NA
+ringing_data$Head[ringing_data$Head==0] <- NA
+ringing_data$Culmen[ringing_data$Culmen==0] <- NA
+ringing_data$Tarsus[ringing_data$Tarsus==0] <- NA
+ringing_data$Tail[ringing_data$Tail==0] <- NA
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
