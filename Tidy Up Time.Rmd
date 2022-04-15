@@ -11,14 +11,13 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-### Into the Tidyverse: cleaning data
 
-This document provides the step-by-step instructions to tidy SABAP2 data using the tidyverse
-to then create a plot of the probability of active moult in female and male sunbirds and the probability of a brood patch being present. The species code (SPP) can be changed to pull data different species. 
-The malachite sunbird (code: 751) is the focal species for this particular version of the document. 
+**This document provides the step-by-step instructions to tidy SABAP2 data using the tidyverse to then create a plot of the probability of active moult in female and male sunbirds and the probability of a brood patch being present.The SABAP2 data can be accessed [here](https://sabap2.birdmap.africa/).**
+**The species code (SPP) can be changed to pull data of different species. The malachite sunbird (code: 751) is the focal species for this particular version of the document.**
 
-**Section 1: install and Load**
 
+
+### Section 1: install and load
 
 Firstly, one's workspace must be cleaned. 
 
@@ -45,7 +44,7 @@ install.packages("rjson", repos = "http://cran.us.r-project.org")
 
 The packages that have been installed then need to be loaded. 
 
-```{r step 3, results='hide', warning=FALSE}
+```{r step 3, results='hide', warning=FALSE, message=FALSE}
 library(dplyr)
 
 library(ggplot2)
@@ -67,7 +66,9 @@ ringing_data <- read.csv(paste('https://api.birdmap.africa/safring/species/recor
 
 
 
-**Section 2: tidying the SABAP2 data for a focal species**
+
+
+### Section 2: tidying the SABAP2 data for a focal species
 
 The ages that are recorded for the birds in the database must be numeric and the juveniles must be filtered out from the adults. We will only be working with adults. 
 
@@ -163,7 +164,7 @@ for(k in 1:nrow(ringing_data)){
 ```
 
 
-The 'NAs' then need replaced with 'OK' to soften the next filter step.
+The 'NAs' then need to be replaced with 'OK' to soften the next filter step.
 
 ```{r step 10, results='hide'}
 
@@ -188,7 +189,7 @@ ringing_data <- filter(ringing_data, masscheck!='error', tarsuscheck!='error',he
 ```
 
 The column containing the brood patch information then needs to be cleaned so that the correct, and tidied data is plotted in Section 3. 
-```{r step 12, results='hide'}
+```{r step 12, results='hide', warning=FALSE}
 
 ringing_data$BP <-  as.numeric(ringing_data$Brood_patch) 
 
@@ -218,7 +219,7 @@ ringing_data$Year <- format(ringing_data$Startdate1, "%Y")
 
 
 Next, the moult data must be numeric and filtered to remove NA values, which imply that active moult is not occurring. 
-```{r step 14, results='hide'}
+```{r step 14, results='hide', warning=FALSE}
 
 ringing_data$Moult <- as.numeric(ringing_data$Moult)
 
@@ -230,11 +231,14 @@ ringing_data$active_moult <- ifelse(ringing_data$Moult>0&ringing_data$Moult<5555
 ```
 
 
-**Section 3: plotting active moult and brood patch of the focal species**
+
+
+
+### Section 3: plotting active moult and brood patch of the focal species
 
 This last section provides the code to make a plot of the probability of active moult in female (pink line) and male (blue line) birds of the focal species, which in this case is the malachite sunbird. The probability of a brood patch (black line) is also included to visualize the relationship between active moult and a brood patch. 
 
-```{r step 15}
+```{r step 15, warning=FALSE, message=FALSE}
 
 ggplot(data = filter(ringing_data, Age==4, Sex%in%c(1)), aes(as.numeric(Month), active_moult))+  
   geom_smooth() +xlab("Month") + ylab("Active Moult")+theme_bw(base_size = 14)+
@@ -242,5 +246,6 @@ ggplot(data = filter(ringing_data, Age==4, Sex%in%c(1)), aes(as.numeric(Month), 
   geom_smooth(data = filter(ringing_data, Age==4, Sex%in%c(2)), aes(as.numeric(Month), BP), colour="black", size = 0.5)
 ```
 
+And this is the final plot!
 
 
