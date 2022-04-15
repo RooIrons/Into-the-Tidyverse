@@ -1,7 +1,7 @@
 ---
-title: "Clean Up On Aisle 5"
-author: "Rebecca Irons"
-date: '2022-04-15'
+title: "Into the Tidyverse: Cleaning SABAP Data"
+author: "Alan Lee and Rebecca Irons (IRNREB001)"
+date: 'Due: 18 April 2022'
 output:
   html_document: default
   pdf_document: default
@@ -11,79 +11,181 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Into the Tidyverse: cleaning data
+### Into the Tidyverse: cleaning data
 
 This document provides the step-by-step instructions to tidy SABAP2 data using the tidyverse
 to then create a plot of the probability of active moult in female and male sunbirds separated
-from east to west. The species code (SPP) can be changed to pull data a different species. 
+from east to west. The species code (SPP) can be changed to pull data different species. 
 The malachite sunbird (code: 751) is the focal species for this particular version of the document. 
 
-Clean your workspace. 
+**Section 1: install and Load**
+
+
+Firstly, one's workspace must be cleaned. 
+
 ```{r step 1}
+
 rm(list=ls())
 ```
 
-Install the necessary packages:
 
-- to manipulate the data 
-```{r step 2a}
-install.packages("tidyverse")
+There are several packages that need to be installed to manipulate and tidy the SABAP2 data. 
+
+- Tidyverse is required to manipulate the data: 
+```{r step 2a, results='hide', warning=FALSE}
+install.packages("tidyverse", repos = "http://cran.us.r-project.org")
 ```
 
-- to access the data from SABAP2 
-```{r step 2b}
-install.packages("RCurl")
-install.packages("rjson")
+- RCurl and rjson is required to access the data from SABAP2 using as API.  
+```{r step 2b, results='hide', warning=FALSE}
+install.packages("RCurl", repos = "http://cran.us.r-project.org")
+
+install.packages("rjson", repos = "http://cran.us.r-project.org")
 ```
 
-Load the packages.  
-```{r step 3}
+
+The packages that have been installed then need to be loaded. 
+
+```{r step 3, results='hide', warning=FALSE}
 library(dplyr)
+
 library(ggplot2)
+
 library(broom)
+
 library(RCurl)
+
 library(rjson)
 ```
 
+
 Using an API, access the SABAP2 database and load the data for your focal species. 
 
-```{r step 4}
+```{r step 4, results='hide'}
 SPP = 751
 ringing_data <- read.csv(paste('https://api.birdmap.africa/safring/species/records_list/',SPP,'?format=csv',sep=""))
 ```
 
-Make the ages numeric and filter the juveniles from the adults (only working with adults).
-```{r step 5}
+
+
+**Section 2: tidying the SABAP2 data for a focal species**
+
+The ages that are recorded for the birds in the database must be numeric and the juveniles must be filtered out from the adults. We will only be working with adults. 
+
+```{r step 5, results='hide'}
+
 ringing_data$Age <- as.numeric(ringing_data$Age)
+
 ringing_data <- filter(ringing_data, Age>3)
 ```
 
-Tidy the metric data (tarsus length, mass etc) so that they are numeric.
-```{r step 6}
+
+The metric data (tarsus length, mass etc) needs to be tidied. These data must be numeric.
+```{r step 6, results='hide'}
+
 ringing_data$Mass <- as.numeric(as.character(ringing_data$Mass))
+
 ringing_data$Wing <- as.numeric(as.character(ringing_data$Wing))
+
 ringing_data$Culmen <- as.numeric(as.character(ringing_data$Culmen)) 
+
 ringing_data$Head <- as.numeric(as.character(ringing_data$Head))
+
 ringing_data$Tarsus <- as.numeric(as.character(ringing_data$Tarsus))
 ```
 
-A common issue in the SAFRING database is that volunteers fill cards in with a zero as opposed to leaving the space blank; therefore, these zeros need to be removed. 
-```{r step 7}
+
+A common issue in the SAFRING database is that volunteers fill in some metric data in with a zero as opposed to leaving it blank; therefore, these zeros need to be removed as a zero length - for example - does not make sense. 
+
+```{r step 7, results='hide'}
+
 ringing_data$Mass[ringing_data$Mass==0] <- NA
+
 ringing_data$Wing[ringing_data$Wing==0] <- NA
+
 ringing_data$Head[ringing_data$Head==0] <- NA
+
 ringing_data$Culmen[ringing_data$Culmen==0] <- NA
+
 ringing_data$Tarsus[ringing_data$Tarsus==0] <- NA
+
 ringing_data$Tail[ringing_data$Tail==0] <- NA
 
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+It is necessary - then - to remove non-sensical, extreme outliers from the metric data (measurements outside the 99% quantile). A reference set is created with the focal species and the pentad data is filtered.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r step 8, results='hide'}
+  
+checkmass <- ringing_data%>%filter(!is.na(Mass))%>%do(data.frame(lc=quantile(.$Mass, c(.05)), uq=quantile(.$Mass, c(.995)), n=length(.$Mass) ))
+
+checkWing <- ringing_data%>%filter(!is.na(Wing))%>%do(data.frame(lcwing=quantile(.$Wing, c(.005)), uqwing=quantile(.$Wing, c(.995)), n=length(.$Wing)))
+
+checkTarsus <- ringing_data%>%filter(!is.na(Tarsus))%>%do(data.frame(lctarsus=quantile(.$Tarsus, c(.005)), uqtarsus=quantile(.$Tarsus, c(.995)), n=length(.$Tarsus)))
+
+checkHead <- ringing_data%>%filter(!is.na(Head))%>%do(data.frame(lcHead=quantile(.$Head, c(.005)), uqHead=quantile(.$Head, c(.995)), n=length(.$Head)))
+
+checkCulmen <- ringing_data%>%filter(!is.na(Culmen))%>%do(data.frame(lcCulmen=quantile(.$Culmen, c(.005)), uqCulmen=quantile(.$Culmen, c(.995)), n=length(.$Culmen)))
+
+checkTail <- ringing_data%>%filter(!is.na(Tail))%>%do(data.frame(lcTail=quantile(.$Tail, c(.005)), uqTail=quantile(.$Tail, c(.995)), n=length(.$Tail)))
+
+
+ringing_data$masscheck <- NA
+
+ringing_data$wingcheck <- NA
+
+ringing_data$headcheck <- NA
+
+ringing_data$culmencheck <- NA
+
+ringing_data$tailcheck <- NA
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+We then need to validate each measurement (inside the 99 quantile) by starting a loop through the data of the focal species.
+
+```{r step 9, results='hide'}
+
+for(k in 1:nrow(ringing_data)){
+  
+  ringing_data$masscheck[k] <- ifelse(ringing_data$Mass[k]<checkmass$uq & ringing_data$Mass[k]>checkmass$lc , "OK", "error")  
+  
+  ringing_data$wingcheck[k] <- ifelse(ringing_data$Wing[k]<checkWing$uq & ringing_data$Wing[k]>checkWing$lc , "OK", "error") 
+  
+  ringing_data$tarsuscheck[k] <- ifelse(ringing_data$Tarsus[k]<checkTarsus$uq & ringing_data$Tarsus[k]>checkTarsus$lc , "OK", "error")  
+  
+  ringing_data$headcheck[k] <- ifelse(ringing_data$Head[k]<checkHead$uq & ringing_data$Head[k]>checkHead$lc , "OK", "error") 
+  
+  ringing_data$culmencheck[k] <- ifelse(ringing_data$Culmen[k]<checkCulmen$uq & ringing_data$Culmen[k]>checkCulmen$lc , "OK", "error") 
+  
+  ringing_data$tailcheck[k] <- ifelse(ringing_data$Tail[k]<checkTail$uq & ringing_data$Tail[k]>checkTail$lc , "OK", "error")  
+}  
+```
+
+
+The 'NAs' then need replaced with 'OK' to soften the next filter step.
+
+```{r step 10, results='hide'}
+
+ringing_data$masscheck[is.na(ringing_data$masscheck)] <- "OK"
+
+ringing_data$tarsuscheck[is.na(ringing_data$tarsuscheck)] <- "OK"
+
+ringing_data$headcheck[is.na(ringing_data$headcheck)] <- "OK"
+
+ringing_data$culmencheck[is.na(ringing_data$culmencheck)] <- "OK"
+
+ringing_data$tailcheck[is.na(ringing_data$tailcheck)] <- "OK"
+```
+
+
+The object containing the data for the focal species then needs to be redefined with the error filtered out. 
+
+```{r step 11, results='hide'}
+
+ringing_data <- filter(ringing_data, masscheck!='error', tarsuscheck!='error',headcheck!='error',culmencheck!='error',tailcheck!='error')
+
+```
+
+
