@@ -373,10 +373,10 @@ Data</h1>
 <p><strong>This document provides the step-by-step instructions to tidy
 SABAP2 data using the tidyverse to then create a plot of the probability
 of active moult in female and male sunbirds and the probability of a
-brood patch being present.</strong> <strong>The species code (SPP) can
-be changed to pull data of different species. The malachite sunbird
-(code: 751) is the focal species for this particular version of the
-document.The SABAP2 data can be accessed <a href="https://sabap2.birdmap.africa/">here</a>.</strong></p>
+brood patch being present.The SABAP2 data can be accessed <a href="https://sabap2.birdmap.africa/">here</a>.</strong> <strong>The
+species code (SPP) can be changed to pull data of different species. The
+malachite sunbird (code: 751) is the focal species for this particular
+version of the document.</strong></p>
 <div id="section-1-install-and-load" class="section level3">
 <h3>Section 1: install and load</h3>
 <p>Firstly, one’s workspace must be cleaned.</p>
@@ -394,14 +394,16 @@ API.</li>
 <pre class="r"><code>install.packages(&quot;RCurl&quot;, repos = &quot;http://cran.us.r-project.org&quot;)
 
 install.packages(&quot;rjson&quot;, repos = &quot;http://cran.us.r-project.org&quot;)</code></pre>
-<p>The packages that have been installed then need to be loaded.</p>
+<p>The packages from the tidyverse have to be loaded. These packages
+are:</p>
 <pre class="r"><code>library(dplyr)
 
 library(ggplot2)
 
-library(broom)
-
-library(RCurl)
+library(broom)</code></pre>
+<p>The packages required for loading in the data from the SABAP2 website
+are:</p>
+<pre class="r"><code>library(RCurl)
 
 library(rjson)</code></pre>
 <p>Using an API, access the SABAP2 database and load the data for your
@@ -429,8 +431,8 @@ ringing_data$Head &lt;- as.numeric(as.character(ringing_data$Head))
 
 ringing_data$Tarsus &lt;- as.numeric(as.character(ringing_data$Tarsus))</code></pre>
 <p>A common issue in the SAFRING database is that volunteers fill in
-some metric data in with a zero as opposed to leaving it blank;
-therefore, these zeros need to be removed as a zero length - for example
+some metric data in with a zero as opposed to leaving it blank.
+Therefore, these zeros need to be removed as a zero length - for example
 - does not make sense.</p>
 <pre class="r"><code>ringing_data$Mass[ringing_data$Mass==0] &lt;- NA
 
