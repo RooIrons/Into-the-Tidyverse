@@ -42,19 +42,28 @@ install.packages("rjson", repos = "http://cran.us.r-project.org")
 ```
 
 
-The packages that have been installed then need to be loaded. 
 
-```{r step 3, results='hide', warning=FALSE, message=FALSE}
+The packages from the tidyverse have to be loaded. These packages are:
+
+```{r step 3a, results='hide', warning=FALSE, message=FALSE}
+
 library(dplyr)
 
 library(ggplot2)
 
 library(broom)
 
+```
+
+
+The packages required for loading in the data from the SABAP2 website are:
+```{r step 3 b, results='hide',warning=FALSE, message=FALSE}
+
 library(RCurl)
 
 library(rjson)
 ```
+
 
 
 Using an API, access the SABAP2 database and load the data for your focal species. 
@@ -95,7 +104,7 @@ ringing_data$Tarsus <- as.numeric(as.character(ringing_data$Tarsus))
 ```
 
 
-A common issue in the SAFRING database is that volunteers fill in some metric data in with a zero as opposed to leaving it blank; therefore, these zeros need to be removed as a zero length - for example - does not make sense. 
+A common issue in the SAFRING database is that volunteers fill in some metric data in with a zero as opposed to leaving it blank. Therefore, these zeros need to be removed as a zero length - for example - does not make sense. 
 
 ```{r step 7, results='hide'}
 
